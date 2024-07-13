@@ -1,4 +1,4 @@
-'use client'
+
 import { Checkbox } from "./ui/checkbox";
 import { Control } from "react-hook-form";
 import { E164Number, CountryCode } from "libphonenumber-js/core";
