@@ -13,6 +13,8 @@ import {
   IdentificationTypes,
   PatientFormDefaultValues,
 } from "@/constants";
+import { PatientFormValidation } from "@/lib/validation";
+
 import { Button } from "../ui/button";
 import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";
@@ -33,44 +35,85 @@ import {
 import SubmitButton from "../SubmitButton";
 import { UserFormValidation } from "@/lib/validation";
  import { FormFieldType } from "./PatientForm";   
+ import { registerPatient } from "@/lib/actions/patient.actions";
 
 
-  const formSchema = z.object({
-    username: z.string().min(2, {
-      message: "Username must be at least 2 characters.",
-    }),
-  })
+  // const formSchema = z.object({
+  //   username: z.string().min(2, {
+  //     message: "Username must be at least 2 characters.",
+  //   }),
+  // })
 
 
  const  RegisterForm = ({user}:{user:User}) => {
   const router=useRouter();
 
-  const [isLoading,setIsLoading]=useState(false);
-    const form = useForm<z.infer<typeof UserFormValidation>>({
-        resolver: zodResolver(UserFormValidation),
-        defaultValues: {
-         name: "",
-         email: "",
-         phone: "",
-        },
-      })
-
+  const [isLoading,setIsLoading]=useState(false);  const form = useForm<z.infer<typeof PatientFormValidation>>({
+    resolver: zodResolver(PatientFormValidation),
+    defaultValues: {
+      ...PatientFormDefaultValues,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    },
+  });
     
-
-      async function onSubmit({name,email,phone}:z.infer<typeof UserFormValidation>){
+      const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {
         setIsLoading(true);
-        try{
-           const  userData={name,email,phone};
-          const user=await createUser(userData);
-          if (user) {
-                  router.push(`/patients/${user.$id}/register`);
-                }
+    
+        // Store file info in form data as
+        let formData;
+        if (
+          values.identificationDocument &&
+          values.identificationDocument?.length > 0
+        ) {
+          const blobFile = new Blob([values.identificationDocument[0]], {
+            type: values.identificationDocument[0].type,
+          });
+    
+          formData = new FormData();
+          formData.append("blobFile", blobFile);
+          formData.append("fileName", values.identificationDocument[0].name);
         }
-        catch(error){
-          console.log(error)
+    
+        try {
+          const patient = {
+            userId: user.$id,
+            name: values.name,
+            email: values.email,
+            phone: values.phone,
+            birthDate: new Date(values.birthDate),
+            gender: values.gender,
+            address: values.address,
+            occupation: values.occupation,
+            emergencyContactName: values.emergencyContactName,
+            emergencyContactNumber: values.emergencyContactNumber,
+            primaryPhysician: values.primaryPhysician,
+            insuranceProvider: values.insuranceProvider,
+            insurancePolicyNumber: values.insurancePolicyNumber,
+            allergies: values.allergies,
+            currentMedication: values.currentMedication,
+            familyMedicalHistory: values.familyMedicalHistory,
+            pastMedicalHistory: values.pastMedicalHistory,
+            identificationType: values.identificationType,
+            identificationNumber: values.identificationNumber,
+            identificationDocument: values.identificationDocument
+              ? formData
+              : undefined,
+            privacyConsent: values.privacyConsent,
+          }; 
+          //@ts-ignore
+          const newPatient = await registerPatient(patient);
+    
+          if (newPatient) {
+            router.push(`/patients/${user.$id}/new-appointment`);
+          }
+        } catch (error) {
+          console.log(error);
         }
-        setIsLoading(false)
-      }
+    
+        setIsLoading(false);
+      };
 
   return (
     <Form {...form}>
