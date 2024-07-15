@@ -18,6 +18,16 @@ import Image from "next/image";
 import { FormFieldType } from "./forms/PatientForm";
 import ReactDatePicker from "react-datepicker";
 
+// export enum FormFieldType{
+//   INPUT='input',
+//   TEXTAREA='textarea',
+//   PHONE_INPUT='phoneInput',
+//   CHECKBOX='checkbox',
+//   DATE_PICKER='datePicker',
+//   SELECT='select',
+//   SKELETON='skeleton'
+// }
+
 
 interface CustomProps{
   control: Control<any>;
